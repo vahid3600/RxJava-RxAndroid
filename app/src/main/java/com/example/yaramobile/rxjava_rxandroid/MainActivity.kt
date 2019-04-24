@@ -17,6 +17,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
 
     var observable: Observable<Int>? = null
+    var disposable: CompositeDisposable? = null
 
     companion object {
         val TAG = MainActivity::class.qualifiedName
@@ -27,10 +28,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        Retrofit().showPosts()
+        Retrofit().showPostsSampleOne()
+        disposable?.add(Retrofit().showPostsSampleTwo())
 
-        Observable.fromArray(listOf(1, 2, 3, 4))
-
+        //observable just
         observable = Observable.just(1, 2, 3, 4)
             .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
@@ -54,6 +55,10 @@ class MainActivity : AppCompatActivity() {
 
         })
 
+        //observable from
+        Observable.fromArray(listOf(1, 2, 3, 4)).subscribe()
+
+        //observable create
         Observable.create(object : ObservableOnSubscribe<Int> {
             override fun subscribe(emitter: ObservableEmitter<Int>) {
 
@@ -61,8 +66,9 @@ class MainActivity : AppCompatActivity() {
                     emitter.onNext(i)
             }
 
-        })
+        }).subscribe()
 
+        //make a compositeDisposable by set of observables
         CompositeDisposable(
             Observable.just(1, 2, 3, 4).subscribe(),
             Observable.just(1, 2, 3, 4).subscribe(),
@@ -74,5 +80,13 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, it.toString())
             }
 
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        //dispose observers
+        disposable?.clear()
+        disposable?.dispose()
     }
 }
