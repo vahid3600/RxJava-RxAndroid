@@ -2,6 +2,7 @@ package com.example.yaramobile.rxjava_rxandroid
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.SearchView
 import android.util.Log
 import com.jakewharton.rxbinding.widget.RxTextView
 import io.reactivex.Observable
@@ -13,6 +14,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
@@ -80,6 +82,28 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, it.toString())
             }
 
+        //searchView in RX
+        Observable.create(object : ObservableOnSubscribe<String> {
+            override fun subscribe(emitter: ObservableEmitter<String>) {
+                search_view.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                    override fun onQueryTextSubmit(p0: String?): Boolean {
+                        p0?.let { emitter.onNext(it) }
+                        return false
+                    }
+
+                    override fun onQueryTextChange(p0: String?): Boolean {
+                        p0?.let { emitter.onNext(it) }
+                        return false
+                    }
+
+                })
+            }
+        })
+            .map { text -> text.toLowerCase().trim() }
+            .debounce(250, TimeUnit.MILLISECONDS)
+            .distinct()
+            .filter { text -> text.isNotBlank() }
+            .subscribe()
     }
 
     override fun onDestroy() {
